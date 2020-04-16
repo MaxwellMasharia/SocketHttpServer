@@ -2,9 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sample</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket File Uploader</title>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<h1>This is cool</h1>
+<input type="file" class="file_input">
+<script>
+    const fileInput = document.querySelector(".file_input");
+    fileInput.addEventListener("change",function(){
+      const file = fileInput.files[0];
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST","/uploads");
+      xhr.setRequestHeader("FileName",file.name);
+      xhr.send(file);
+    });
+  </script>
 </body>
 </html>

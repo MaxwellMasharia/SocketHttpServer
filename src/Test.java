@@ -40,6 +40,55 @@ public class Test {
                 e.printStackTrace();
             }
         });
+
+        httpServer.registerEntryPoint("/uploads", connectionInterface -> {
+            HashMap<String, String> headers = connectionInterface.getRequestHeaders();
+            try {
+                uploadFile(headers, connectionInterface.getRequestBody());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            connectionInterface.sendResponseHeaders(0, new HashMap<>());
+            try {
+                connectionInterface.getRequestBody().close();
+                connectionInterface.getResponseBody().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
         httpServer.start();
+    }
+
+    private static void uploadFile(HashMap<String, String> headers, InputStream inputStream) throws IOException {
+        BufferedInputStream dataIn = new BufferedInputStream(inputStream);
+        String fileName = headers.get("FileName").trim();
+        String fileSize = headers.get("Content-Length").trim();
+
+        System.out.println("RequestedFile >> " + fileName);
+        System.out.println("RequestedFileSize >> " + fileSize);
+
+        File file = new File("src/uploads/" + fileName);
+        boolean wasFileCreated = file.createNewFile();
+        if (wasFileCreated) {
+            System.out.println("The file >> " + file.getAbsolutePath() + " was created successfully");
+        } else {
+            System.err.println("Error in creating the file >> " + fileName);
+            return;
+        }
+
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
+        int totalReadBytes = 0;
+        while (true) {
+            int readByte = dataIn.read();
+            totalReadBytes++;
+            fileOutputStream.write(readByte);
+            if (totalReadBytes == Integer.parseInt(fileSize)) {
+                System.out.println("Done Reading >> " + totalReadBytes + " bytes of file of size " + fileSize);
+                break;
+            }
+        }
+        fileOutputStream.flush();
+        fileOutputStream.close();
     }
 }

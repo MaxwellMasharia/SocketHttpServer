@@ -53,17 +53,35 @@ public class SocketHttpServer {
                         /*Get the request Headers*/
                         getRequestHeaders(dataIn, connectionInterface);
                         String requestedPath = connectionInterface.getRequestPath().trim();
+                        System.out.println("RequestedPath >> " + requestedPath);
 
                         /*After reading the request headers*/
                         connectionInterface.setRequestBody(dataIn);
                         connectionInterface.setResponseBody(dataOut);
 
                         /*Check for the path in the hashmap*/
-                        registeredPaths.forEach((path, handler) -> {
-                            if (path.equals(requestedPath)) {
-                                handler.handleRequest(connectionInterface);
+                        String[] splitRequestPath = requestedPath.split("/");
+
+                        if (splitRequestPath.length == 0) {
+                            if (registeredPaths.containsKey("/")) {
+                                registeredPaths.get("/").handleRequest(connectionInterface);
+                            } else {
+                                throw new RuntimeException("The entry point / is not registered");
                             }
-                        });
+                        } else {
+                            String firstPath = "/" + splitRequestPath[1].trim();
+                            System.out.println("FirstPath >> " + firstPath);
+                            if (registeredPaths.containsKey(firstPath)) {
+                                registeredPaths.get(firstPath).handleRequest(connectionInterface);
+                            } else {
+                                if (registeredPaths.containsKey("/")) {
+                                    registeredPaths.get("/").handleRequest(connectionInterface);
+                                } else {
+                                    throw new RuntimeException("The entry point / is not registered");
+                                }
+//                                System.err.println("Could not find the key " + firstPath);
+                            }
+                        }
                     } catch (IOException e) {
                         System.err.println(e.getMessage());
                     }
